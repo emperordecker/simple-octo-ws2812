@@ -1,14 +1,9 @@
 #include <Arduino.h>
-
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
-
 #include <ESP8266HTTPClient.h>
-
 #include <Adafruit_NeoPixel.h>
-
 #include <ArduinoJson.h>
-
 #include "config.h"
 
 #define USE_SERIAL Serial
@@ -60,8 +55,8 @@ void loop() {
       if(WiFiMulti.run() == WL_CONNECTED) {
 
           HTTPClient http;
-
-          http.begin(URL); //HTTP
+          WiFiClient client;
+          http.begin(client, URL); //HTTP
 
           //USE_SERIAL.print("[HTTP] GET...\n");
           // start connection and send HTTP header
@@ -94,13 +89,12 @@ void loop() {
                 //     "text": "Operational"
                 //   }
                 // }
-                const size_t capacity = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(7);
-                DynamicJsonBuffer jsonBuffer(capacity);
-
-                // Parse JSON object
-                JsonObject& root = jsonBuffer.parseObject(payload);
-                if (!root.success()) {
-                  Serial.println(F("Parsing failed!"));
+                JsonDocument root;
+                DeserializationError error = deserializeJson(root, payload);
+                  if  (error) {
+                    Serial.print("deserializeJson() returned ");
+                    Serial.println(error.c_str());
+                    //Serial.println(F("Parsing failed!"));
                   return;
                 }
 
